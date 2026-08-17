@@ -279,23 +279,23 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   * { animation: none !important; transition: none !important; }
 }
 
-/* ── Mörkläge: mörkar webbläsarens chrome (växlas via html[data-theme="dark"]) ── */
-:root[data-theme="dark"] body { background: #0c0c0d; color: #f2f2f4; }
-:root[data-theme="dark"] .chrome-top { background: #0c0c0d; }
-:root[data-theme="dark"] .chrome-bar { background: #171718; border-bottom-color: #2b2b2d; }
-:root[data-theme="dark"] .icon-btn { color: #d4d4d8; }
-:root[data-theme="dark"] .icon-btn:hover { background: rgb(255 255 255 / .09); }
-:root[data-theme="dark"] .newtab-btn { color: #d4d4d8; }
-:root[data-theme="dark"] .newtab-btn:hover { background: rgb(255 255 255 / .1); color: #f2f2f4; }
-:root[data-theme="dark"] .tab { color: #a8a8ac; }
-:root[data-theme="dark"] .tab:hover { background: rgb(255 255 255 / .08); color: #f2f2f4; }
-:root[data-theme="dark"] .tab.active { background: #2b2b2e; color: #f2f2f4; box-shadow: none; }
-:root[data-theme="dark"] #omnibox { background: #1d1d20 !important; --tw-ring-color: #3b3b40; }
-:root[data-theme="dark"] #address { color: #f2f2f4; }
-:root[data-theme="dark"] #address::placeholder { color: rgb(240 240 244 / .4); }
-:root[data-theme="dark"] #search-engine { color: rgb(240 240 244 / .4); }
-:root[data-theme="dark"] .pill:not(.pill-accent) { background: #1d1d20; color: #f2f2f4; border-color: #3b3b40; }
-:root[data-theme="dark"] .pill:not(.pill-accent):hover { background: #27272b; }
+/* ── Mörkläge: Skugga har ett mörkt LILA chrome (anonymt Tor-tema) ── */
+:root[data-theme="dark"] body { background: #0d0912; color: #efe9f6; }
+:root[data-theme="dark"] .chrome-top { background: #0d0912; }
+:root[data-theme="dark"] .chrome-bar { background: #161122; border-bottom-color: #2a2140; }
+:root[data-theme="dark"] .icon-btn { color: #cdbfe0; }
+:root[data-theme="dark"] .icon-btn:hover { background: rgb(185 143 208 / .13); }
+:root[data-theme="dark"] .newtab-btn { color: #cdbfe0; }
+:root[data-theme="dark"] .newtab-btn:hover { background: rgb(185 143 208 / .15); color: #efe9f6; }
+:root[data-theme="dark"] .tab { color: #a794c2; }
+:root[data-theme="dark"] .tab:hover { background: rgb(185 143 208 / .1); color: #efe9f6; }
+:root[data-theme="dark"] .tab.active { background: #251a3c; color: #efe9f6; box-shadow: none; }
+:root[data-theme="dark"] #omnibox { background: #191326 !important; --tw-ring-color: #3a2d52; }
+:root[data-theme="dark"] #address { color: #efe9f6; }
+:root[data-theme="dark"] #address::placeholder { color: rgb(231 220 243 / .4); }
+:root[data-theme="dark"] #search-engine { color: rgb(231 220 243 / .4); }
+:root[data-theme="dark"] .pill:not(.pill-accent) { background: #191326; color: #efe9f6; border-color: #3a2d52; }
+:root[data-theme="dark"] .pill:not(.pill-accent):hover { background: #251a3c; }
 
 /* ── Prowl Calendar ── */
 .cal-month { border: 1px solid var(--color-line); border-radius: 16px; padding: 12px 14px 14px; margin-bottom: 18px; }

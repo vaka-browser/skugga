@@ -502,9 +502,14 @@ $('tgl-motion').addEventListener('change', (e) => {
   try { localStorage.setItem('skoll-motion', reduceMotion ? '1' : '0'); } catch {}
 });
 
-/* ── Tema (ljust/mörkt) ── */
-let theme = 'light';
-try { const t = localStorage.getItem('skoll-theme'); if (t === 'dark' || t === 'light') theme = t; } catch {}
+/* ── Tema (ljust/mörkt) — Skugga är mörkt som standard ── */
+let theme = 'dark';
+// Engångs: tvinga mörkt vid första start av den omdesignade Skugga (även på
+// gamla profiler som råkat spara 'light'); användaren kan byta i Utseende sen.
+try {
+  if (!localStorage.getItem('skugga-dark-init')) { localStorage.setItem('skoll-theme', 'dark'); localStorage.setItem('skugga-dark-init', '1'); }
+  const t = localStorage.getItem('skoll-theme'); if (t === 'dark' || t === 'light') theme = t;
+} catch {}
 document.documentElement.dataset.theme = theme;
 function setTheme(t) {
   theme = t === 'dark' ? 'dark' : 'light';
@@ -1128,21 +1133,16 @@ function greet() {
   el.textContent = _greetCache.text;
 }
 async function loadDailyImage() {
-  try {
-    const { url, credit } = await window.skoll.dailyImage();
-    if (url) { const img = new Image(); img.onload = () => { $('nt-bg').style.backgroundImage = `url("${url}")`; }; img.src = url; if (credit) $('nt-credit').textContent = credit; }
-  } catch {}
+  // Skugga: ingen extern dagsbild — behåll den mörka lila gradienten (inget
+  // onödigt nätanrop som kan avslöja något, och det passar det anonyma temat).
+  try { $('nt-bg').style.backgroundImage = 'none'; $('nt-credit').textContent = ''; } catch {}
 }
-const DEFAULT_SHORTCUTS = [
-  { label: 'Google', url: 'https://www.google.com' }, { label: 'YouTube', url: 'https://www.youtube.com' },
-  { label: 'Wikipedia', url: 'https://sv.wikipedia.org' }, { label: 'Säkerkoll', url: 'https://www.xn--skerkoll-0za.se' },
-  { label: 'SVT', url: 'https://www.svt.se' }, { label: 'Blocket', url: 'https://www.blocket.se' },
-  { label: 'Aftonbladet', url: 'https://www.aftonbladet.se' },
-];
+// Skugga: INGA färdiga genvägar — du lägger till dina egna.
+const DEFAULT_SHORTCUTS = [];
 function getShortcuts() { try { const s = JSON.parse(localStorage.getItem('skoll-shortcuts')); if (Array.isArray(s)) return s; } catch {} return DEFAULT_SHORTCUTS.slice(); }
 function saveShortcuts(l) { localStorage.setItem('skoll-shortcuts', JSON.stringify(l)); }
-// Engångsmigrering till hacker-genvägar (pivot till hacker-browser)
-try { if (!localStorage.getItem('vaka-normal-shortcuts')) { localStorage.setItem('skoll-shortcuts', JSON.stringify(DEFAULT_SHORTCUTS)); localStorage.setItem('vaka-normal-shortcuts', '1'); } } catch {}
+// Engångs-nollställning för Skugga: töm ev. gamla genvägar en gång.
+try { if (!localStorage.getItem('skugga-init-v1')) { localStorage.setItem('skoll-shortcuts', JSON.stringify(DEFAULT_SHORTCUTS)); localStorage.setItem('skugga-init-v1', '1'); } } catch {}
 let addingShortcut = false;
 
 function topSites() {

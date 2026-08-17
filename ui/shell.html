@@ -5,7 +5,18 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
   <title>Vaka</title>
   <link rel="stylesheet" href="tailwind.css" />
-<style id="vaka-hide">#net-btn,#quiz-launch,.set-tab[data-cat="kalender"],.set-panel[data-cat="kalender"]{display:none!important}</style>
+<style id="skugga-hide">
+/* Skugga döljer allt som bryter anonymiteten: Krypto (extern AI), konto,
+   familj, chatt, Wallet, nätinspektör, quiz, kalender. */
+#net-btn,#quiz-launch,#krypto-btn,#account-btn,
+.set-tab[data-cat="kalender"],.set-panel[data-cat="kalender"],
+.set-tab[data-cat="konto"],.set-panel[data-cat="konto"],
+.set-tab[data-cat="vanner"],.set-panel[data-cat="vanner"],
+.set-tab[data-cat="krypto"],.set-panel[data-cat="krypto"],
+.set-tab[data-cat="familj"],.set-panel[data-cat="familj"],
+.set-tab[data-cat="wallet"],.set-panel[data-cat="wallet"],
+#quiz,#kcoach,#open-krypto-btn{display:none!important}
+</style>
 <style>
 @keyframes dlpulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
 #dl-btn.dl-busy svg { animation: dlpulse 1.1s ease-in-out infinite; color: #2f8fd4; }
@@ -101,7 +112,7 @@
 
     <div id="omnibox" class="flex-1 flex items-center gap-2.5 h-10 px-4 mx-1 rounded-full bg-white ring-1 ring-[color:var(--color-line)] shadow-[0_1px_3px_rgba(14,42,71,.06)] focus-within:ring-2 focus-within:ring-terra/50 transition">
       <span id="shield" class="shield-wrap shield-home"><svg class="ic ic-sm"><use href="#i-shield" /></svg></span>
-      <input id="address" type="text" spellcheck="false" placeholder="Sök tryggt eller skriv en adress"
+      <input id="address" type="text" spellcheck="false" placeholder="Sök anonymt eller skriv en adress"
              class="flex-1 bg-transparent outline-none text-[14px] text-navy-900 placeholder:text-navy-900/40" />
       <button id="bm-star" class="grid place-items-center w-6 h-6 rounded-md flex-none" style="color:var(--color-navy-600);" title="Spara bokmärke"><svg class="ic ic-sm"><use href="#i-star" /></svg></button>
       <span id="search-engine" class="text-[11px] font-semibold text-navy-900/35 select-none">Google</span>
@@ -198,19 +209,19 @@
     <!-- Startsida -->
     <div id="newtabpage" class="absolute inset-0 hidden overflow-hidden">
       <div id="nt-bg" class="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
-           style="background: linear-gradient(150deg,#0e2a47,#14375c 45%,#1d4a76);"></div>
-      <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(8,20,35,.28), rgba(8,20,35,.72));"></div>
+           style="background: radial-gradient(120% 120% at 50% 0%, #241542 0%, #150c28 55%, #0a0616 100%);"></div>
+      <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(10,6,22,.35), rgba(10,6,22,.78));"></div>
       <div class="relative z-10 h-full flex flex-col items-center justify-center px-8 text-white">
         <div id="nt-clock" class="text-[64px] leading-none font-thin tracking-tight drop-shadow-lg"></div>
         <div id="nt-greet" class="mt-2 text-[19px] font-medium text-white/90 drop-shadow-lg"></div>
         <div class="mt-1.5 mb-8 flex items-center gap-2 text-terra-300 text-[15px] font-semibold">
-          <svg class="ic ic-sm"><use href="#i-shield" /></svg>
-          <span>Vaka</span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 12h9M5 6.5c3 2 11 2 14 0M5 17.5c3-2 11-2 14 0"/></svg>
+          <span>Skugga</span>
         </div>
-        <div class="w-[min(560px,92%)] flex items-center gap-3 h-13 px-5 py-3.5 rounded-full bg-white/95 shadow-2xl backdrop-blur">
-          <span class="text-safe"><svg class="ic ic-sm"><use href="#i-shield-check" /></svg></span>
-          <input id="nt-search" type="text" placeholder="Sök tryggt eller skriv en adress" spellcheck="false"
-                 class="flex-1 bg-transparent outline-none text-[16px] text-navy-900 placeholder:text-navy-900/40" />
+        <div class="w-[min(560px,92%)] flex items-center gap-3 h-13 px-5 py-3.5 rounded-full shadow-2xl backdrop-blur" style="background:rgba(25,19,38,.82);border:1px solid rgba(185,143,208,.28);">
+          <span style="color:#b98fd0;"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 12h9M5 6.5c3 2 11 2 14 0M5 17.5c3-2 11-2 14 0"/></svg></span>
+          <input id="nt-search" type="text" placeholder="Sök anonymt eller skriv en adress" spellcheck="false"
+                 class="flex-1 bg-transparent outline-none text-[16px] text-white placeholder:text-white/40" />
         </div>
         <div id="shortcuts" class="mt-9 grid gap-4 justify-center" style="grid-template-columns: repeat(auto-fit, 88px); width: min(660px, 94%);"></div>
         <button id="quiz-launch" class="mt-8 group flex items-center gap-3.5 rounded-2xl">
@@ -224,9 +235,9 @@
           <span class="ql-arrow grid place-items-center flex-none">→</span>
         </button>
         <div class="mt-10 flex items-center gap-2.5 px-4 py-2 rounded-full text-[13px]"
-             style="background: rgba(51,160,106,.28); border:1px solid rgba(95,208,138,.35); color:#dff3e6;">
-          <span class="w-2 h-2 rounded-full bg-[var(--color-safe-bright)] shadow-[0_0_8px_var(--color-safe-bright)]"></span>
-          <span>Vaka blockerar annonser och granskar varje sida automatiskt.</span>
+             style="background: rgba(125,70,152,.28); border:1px solid rgba(185,143,208,.4); color:#e7dcf3;">
+          <span class="w-2 h-2 rounded-full" style="background:#b98fd0;box-shadow:0 0 8px #b98fd0;"></span>
+          <span>All trafik går genom Tor. Ingen kan se vem eller var du är.</span>
         </div>
         <!-- Skyddsstatistik (kumulativt, sparat lokalt) -->
         <div class="mt-5 flex items-center gap-1 px-2 py-2.5 rounded-2xl" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px);">
@@ -263,8 +274,8 @@
     </style>
     <div id="hxintro" class="gone" style="display:none">
       <div class="hxbox">
-        <div class="hxwm">Vaka</div>
-        <div class="hxsub">Den trygga svenska webbläsaren som vakar över dig.</div>
+        <div class="hxwm">Skugga</div>
+        <div class="hxsub">Allt du gör går genom Tor. Ingen spårning, inga konton, ingen som ser dig.</div>
         <div class="hxhint"><span class="dot"></span>Tryck var som helst för att börja</div>
       </div>
     </div>
