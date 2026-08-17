@@ -83,9 +83,37 @@ async function start({ dataDir, resourcesPath }) {
   proc.stderr.on('data', () => {});
   proc.on('exit', (code) => {
     proc = null;
+    if (bootPoll) { clearInterval(bootPoll); bootPoll = null; }
     if (state.phase !== 'stopping') setState({ phase: 'error', error: state.error || ('tor avslutades (kod ' + code + ')') });
   });
+
+  // AUKTORITATIV progress: fråga kontrollporten direkt i stället för att lita på
+  // att stdout-raderna når oss (de gör det inte alltid i den paketerade appen →
+  // uppkopplingslåset fastnade på 0 % fast tor var klar). Pollas tills done.
+  startBootstrapPoll();
   return { socksPort };
+}
+
+let bootPoll = null;
+function startBootstrapPoll() {
+  if (bootPoll) clearInterval(bootPoll);
+  let tries = 0;
+  bootPoll = setInterval(async () => {
+    tries++;
+    try {
+      const out = await controlCmd(['GETINFO status/bootstrap-phase']);
+      const pm = out.match(/PROGRESS=(\d+)/);
+      const done = /TAG=done/.test(out);
+      if (pm) {
+        const p = parseInt(pm[1], 10);
+        setState({ phase: (done || p >= 100) ? 'ready' : 'boot', progress: p });
+      }
+      if (done || (pm && parseInt(pm[1], 10) >= 100)) { clearInterval(bootPoll); bootPoll = null; }
+    } catch (e) {
+      // Kontrollporten kan vara oåtkomlig de första sekunderna (cookie ej skriven än) — försök igen.
+      if (tries > 120) { clearInterval(bootPoll); bootPoll = null; }
+    }
+  }, 1200);
 }
 
 function stop() {

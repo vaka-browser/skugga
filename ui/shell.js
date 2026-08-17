@@ -2472,6 +2472,14 @@ else { try { window.session.setkey(null); } catch {} }
 
   window.tor.onState(render);
   window.tor.state().then(render).catch(() => {});
+  // Skyddsnät: polla tillståndet tills Tor är klart, ifall en broadcast missades
+  // (annars kan uppkopplingslåset fastna trots att Tor faktiskt är uppkopplat).
+  const torPoll = setInterval(() => {
+    window.tor.state().then((s) => {
+      render(s);
+      if (s && (s.phase === 'ready' || s.phase === 'error')) clearInterval(torPoll);
+    }).catch(() => {});
+  }, 2000);
 
   // Klick på pillen = ny Tor-identitet (nya reläer/utgångs-IP)
   if (pill) pill.addEventListener('click', async () => {
