@@ -206,49 +206,110 @@
       <button id="wfillbar-no" class="h-8 px-3 rounded-lg text-[13px] font-semibold flex-none" style="background:var(--color-paper);color:var(--color-navy-900);">Inte nu</button>
     </div>
 
-    <!-- Startsida -->
+    <!-- Startsida — mörk anonymitetsvy: låst hänglås omgivet av spanande ögon i mörkret -->
+    <style>
+      /* Ögon som stirrar in mot låset men hålls ute — blinkar i osynk, driver sakta */
+      #sk-eyes .eye{transform-box:fill-box;transform-origin:center;animation:skblink 6s ease-in-out infinite}
+      #sk-eyes .eye .lid{transform-box:fill-box;transform-origin:center;animation:skclose 6s ease-in-out infinite}
+      #sk-eyes .e1{animation-delay:.0s}   #sk-eyes .e1 .lid{animation-delay:.0s}
+      #sk-eyes .e2{animation-delay:1.4s}  #sk-eyes .e2 .lid{animation-delay:1.4s}
+      #sk-eyes .e3{animation-delay:2.6s}  #sk-eyes .e3 .lid{animation-delay:2.6s}
+      #sk-eyes .e4{animation-delay:.8s}   #sk-eyes .e4 .lid{animation-delay:.8s}
+      #sk-eyes .e5{animation-delay:3.4s}  #sk-eyes .e5 .lid{animation-delay:3.4s}
+      #sk-eyes .e6{animation-delay:4.6s}  #sk-eyes .e6 .lid{animation-delay:4.6s}
+      #sk-eyes .e7{animation-delay:2.0s}  #sk-eyes .e7 .lid{animation-delay:2.0s}
+      @keyframes skblink{0%,90%,100%{opacity:.34}45%{opacity:.6}}
+      @keyframes skclose{0%,6%,100%{transform:scaleY(0)}3%{transform:scaleY(1)}}
+      #sk-ring{transform-box:fill-box;transform-origin:center;animation:skspin 26s linear infinite}
+      #sk-ring2{transform-box:fill-box;transform-origin:center;animation:skspin 20s linear infinite reverse}
+      @keyframes skspin{to{transform:rotate(360deg)}}
+      #sk-aura{transform-box:fill-box;transform-origin:center;animation:skaura 4.5s ease-in-out infinite}
+      @keyframes skaura{0%,100%{opacity:.5}50%{opacity:.85}}
+      #sk-lock{transform-box:fill-box;transform-origin:center;animation:skfloat 7s ease-in-out infinite}
+      @keyframes skfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+      body.reduce-motion #newtabpage *{animation:none!important}
+    </style>
     <div id="newtabpage" class="absolute inset-0 hidden overflow-hidden">
       <div id="nt-bg" class="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
-           style="background: radial-gradient(130% 130% at 50% 12%, #5a2d8f 0%, #3a1a6e 34%, #241046 62%, #14082a 100%);"></div>
-      <div class="absolute inset-0" style="background: radial-gradient(90% 70% at 50% 40%, rgba(20,8,42,0), rgba(12,5,26,.55) 100%);"></div>
+           style="background: radial-gradient(120% 120% at 50% 6%, #241636 0%, #170e28 28%, #0c0717 58%, #050308 100%);"></div>
+      <div class="absolute inset-0" style="background: radial-gradient(70% 55% at 50% 44%, rgba(124,58,180,.14), rgba(5,3,8,0) 70%);"></div>
       <div class="relative z-10 h-full flex flex-col items-center justify-center px-8 text-white">
-        <div id="nt-clock" class="text-[64px] leading-none font-thin tracking-tight drop-shadow-lg"></div>
-        <div id="nt-greet" class="mt-2 text-[19px] font-medium text-white/90 drop-shadow-lg"></div>
-        <div class="mt-1.5 mb-8 flex items-center gap-2 text-terra-300 text-[15px] font-semibold">
-          <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 12h9M5 6.5c3 2 11 2 14 0M5 17.5c3-2 11-2 14 0"/></svg>
+        <div class="flex items-baseline gap-3 opacity-90">
+          <div id="nt-clock" class="text-[30px] leading-none font-thin tracking-tight text-white/85"></div>
+          <div id="nt-greet" class="text-[14px] font-medium text-white/55"></div>
+        </div>
+
+        <!-- Hero: ögon i mörkret + låst hänglås -->
+        <div class="mt-4 mb-1 relative" style="width:min(360px,80vw);">
+          <svg viewBox="0 0 440 300" width="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="sk-lockg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#c79be6"/><stop offset=".5" stop-color="#9457c9"/><stop offset="1" stop-color="#5f2e91"/>
+              </linearGradient>
+              <linearGradient id="sk-shackg" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#e9d8f7"/><stop offset="1" stop-color="#a869d8"/>
+              </linearGradient>
+              <radialGradient id="sk-glowg" cx=".5" cy=".5" r=".5">
+                <stop offset="0" stop-color="#a95fe0" stop-opacity=".5"/><stop offset="1" stop-color="#a95fe0" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+
+            <!-- spanande ögon i mörkret -->
+            <g id="sk-eyes" fill="none" stroke="#b98fd0">
+              <g class="eye e1" transform="translate(58,64)"><path d="M-17 0Q0 -11 17 0Q0 11 -17 0Z" stroke-width="1.6" fill="#0e0820"/><circle r="5.6" cx="3" cy="2" fill="#cda9e6" stroke="none"/><circle r="2.6" cx="4" cy="3" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-17 0Q0 -11 17 0Q0 11 -17 0Z" fill="#0b0618" stroke="none"/></g>
+              <g class="eye e2" transform="translate(384,72)"><path d="M-17 0Q0 -11 17 0Q0 11 -17 0Z" stroke-width="1.6" fill="#0e0820"/><circle r="5.6" cx="-3" cy="2" fill="#cda9e6" stroke="none"/><circle r="2.6" cx="-4" cy="3" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-17 0Q0 -11 17 0Q0 11 -17 0Z" fill="#0b0618" stroke="none"/></g>
+              <g class="eye e3" transform="translate(30,158)"><path d="M-16 0Q0 -10 16 0Q0 10 -16 0Z" stroke-width="1.5" fill="#0e0820"/><circle r="5.2" cx="4" cy="0" fill="#cda9e6" stroke="none"/><circle r="2.4" cx="5" cy="0" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-16 0Q0 -10 16 0Q0 10 -16 0Z" fill="#0b0618" stroke="none"/></g>
+              <g class="eye e4" transform="translate(412,162)"><path d="M-16 0Q0 -10 16 0Q0 10 -16 0Z" stroke-width="1.5" fill="#0e0820"/><circle r="5.2" cx="-4" cy="0" fill="#cda9e6" stroke="none"/><circle r="2.4" cx="-5" cy="0" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-16 0Q0 -10 16 0Q0 10 -16 0Z" fill="#0b0618" stroke="none"/></g>
+              <g class="eye e5" transform="translate(78,250)"><path d="M-15 0Q0 -9 15 0Q0 9 -15 0Z" stroke-width="1.5" fill="#0e0820"/><circle r="4.8" cx="3" cy="-2" fill="#cda9e6" stroke="none"/><circle r="2.2" cx="4" cy="-3" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-15 0Q0 -9 15 0Q0 9 -15 0Z" fill="#0b0618" stroke="none"/></g>
+              <g class="eye e6" transform="translate(366,256)"><path d="M-15 0Q0 -9 15 0Q0 9 -15 0Z" stroke-width="1.5" fill="#0e0820"/><circle r="4.8" cx="-3" cy="-2" fill="#cda9e6" stroke="none"/><circle r="2.2" cx="-4" cy="-3" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-15 0Q0 -9 15 0Q0 9 -15 0Z" fill="#0b0618" stroke="none"/></g>
+              <g class="eye e7" transform="translate(220,30)"><path d="M-15 0Q0 -9 15 0Q0 9 -15 0Z" stroke-width="1.5" fill="#0e0820"/><circle r="4.8" cx="0" cy="3" fill="#cda9e6" stroke="none"/><circle r="2.2" cx="0" cy="4" fill="#1a0f2e" stroke="none"/><path class="lid" d="M-15 0Q0 -9 15 0Q0 9 -15 0Z" fill="#0b0618" stroke="none"/></g>
+            </g>
+
+            <!-- skyddsaura + roterande ringar som håller blickarna ute -->
+            <ellipse id="sk-aura" cx="220" cy="168" rx="120" ry="112" fill="url(#sk-glowg)"/>
+            <circle id="sk-ring" cx="220" cy="168" r="96" fill="none" stroke="#8a52c4" stroke-opacity=".38" stroke-width="1.4" stroke-dasharray="3 12" stroke-linecap="round"/>
+            <circle id="sk-ring2" cx="220" cy="168" r="112" fill="none" stroke="#6f3ba8" stroke-opacity=".22" stroke-width="1" stroke-dasharray="1 16" stroke-linecap="round"/>
+
+            <!-- hänglåset (låst) -->
+            <g id="sk-lock">
+              <path d="M191 150 L191 122 A29 29 0 0 1 249 122 L249 150" fill="none" stroke="url(#sk-shackg)" stroke-width="14" stroke-linecap="round"/>
+              <rect x="158" y="148" width="124" height="112" rx="20" fill="url(#sk-lockg)"/>
+              <rect x="168" y="156" width="104" height="38" rx="13" fill="#ffffff" opacity=".1"/>
+              <rect x="158.75" y="148.75" width="122.5" height="110.5" rx="19.5" fill="none" stroke="#e9d5ff" stroke-opacity=".4" stroke-width="1.4"/>
+              <circle cx="220" cy="190" r="11.5" fill="#2c0f4a"/>
+              <path d="M214.5 198 L225.5 198 L229 226 L211 226 Z" fill="#2c0f4a"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="flex items-center gap-2 text-[16px] font-bold tracking-tight" style="color:#e7dcf3;">
+          <svg class="ic ic-sm" style="color:#b98fd0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 12h9M5 6.5c3 2 11 2 14 0M5 17.5c3-2 11-2 14 0"/></svg>
           <span>Skugga</span>
         </div>
-        <div class="w-[min(560px,92%)] flex items-center gap-3 h-13 px-5 py-3.5 rounded-full shadow-2xl backdrop-blur" style="background:rgba(25,19,38,.82);border:1px solid rgba(185,143,208,.28);">
+        <div class="mt-1 mb-5 text-[12.5px] text-white/45">De försöker se dig. Här kan de inte.</div>
+
+        <div class="w-[min(560px,92%)] flex items-center gap-3 h-13 px-5 py-3.5 rounded-full shadow-2xl backdrop-blur" style="background:rgba(18,12,28,.85);border:1px solid rgba(138,82,196,.32);">
           <span style="color:#b98fd0;"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 12h9M5 6.5c3 2 11 2 14 0M5 17.5c3-2 11-2 14 0"/></svg></span>
           <input id="nt-search" type="text" placeholder="Sök anonymt eller skriv en adress" spellcheck="false"
-                 class="flex-1 bg-transparent outline-none text-[16px] text-white placeholder:text-white/40" />
+                 class="flex-1 bg-transparent outline-none text-[16px] text-white placeholder:text-white/35" />
         </div>
-        <div id="shortcuts" class="mt-9 grid gap-4 justify-center" style="grid-template-columns: repeat(auto-fit, 88px); width: min(660px, 94%);"></div>
-        <button id="quiz-launch" class="mt-8 group flex items-center gap-3.5 rounded-2xl">
-          <span class="ql-ic grid place-items-center flex-none">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a1409" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
-          </span>
-          <span class="text-left leading-tight flex-1 min-w-0">
-            <span class="block text-[14px] font-bold text-white">Var ska du börja jaga?</span>
-            <span class="block text-[12px]" style="color:#ffc7ad;">Ta quizet — vi matchar dig mot rätt program</span>
-          </span>
-          <span class="ql-arrow grid place-items-center flex-none">→</span>
-        </button>
-        <div class="mt-10 flex items-center gap-2.5 px-4 py-2 rounded-full text-[13px]"
-             style="background: rgba(125,70,152,.28); border:1px solid rgba(185,143,208,.4); color:#e7dcf3;">
+        <div id="shortcuts" class="mt-8 grid gap-4 justify-center" style="grid-template-columns: repeat(auto-fit, 88px); width: min(660px, 94%);"></div>
+
+        <div class="mt-9 flex items-center gap-2.5 px-4 py-2 rounded-full text-[13px]"
+             style="background: rgba(90,45,130,.22); border:1px solid rgba(138,82,196,.34); color:#dccef0;">
           <span class="w-2 h-2 rounded-full" style="background:#b98fd0;box-shadow:0 0 8px #b98fd0;"></span>
           <span>All trafik går genom Tor. Ingen kan se vem eller var du är.</span>
         </div>
         <!-- Skyddsstatistik (kumulativt, sparat lokalt) -->
-        <div class="mt-5 flex items-center gap-1 px-2 py-2.5 rounded-2xl" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px);">
-          <div class="text-center px-4"><div id="stat-ads" class="text-[21px] font-bold text-white leading-none">0</div><div class="text-[11px] text-white/60 mt-1">Annonser</div></div>
-          <div class="w-px h-8" style="background:rgba(255,255,255,.15)"></div>
-          <div class="text-center px-4"><div id="stat-trackers" class="text-[21px] font-bold text-white leading-none">0</div><div class="text-[11px] text-white/60 mt-1">Spårare</div></div>
-          <div class="w-px h-8" style="background:rgba(255,255,255,.15)"></div>
-          <div class="text-center px-4"><div id="stat-dangers" class="text-[21px] font-bold text-white leading-none">0</div><div class="text-[11px] text-white/60 mt-1">Farliga sidor</div></div>
+        <div class="mt-5 flex items-center gap-1 px-2 py-2.5 rounded-2xl" style="background:rgba(255,255,255,.05);border:1px solid rgba(185,143,208,.16);backdrop-filter:blur(8px);">
+          <div class="text-center px-4"><div id="stat-ads" class="text-[21px] font-bold text-white leading-none">0</div><div class="text-[11px] text-white/55 mt-1">Annonser</div></div>
+          <div class="w-px h-8" style="background:rgba(185,143,208,.2)"></div>
+          <div class="text-center px-4"><div id="stat-trackers" class="text-[21px] font-bold text-white leading-none">0</div><div class="text-[11px] text-white/55 mt-1">Spårare</div></div>
+          <div class="w-px h-8" style="background:rgba(185,143,208,.2)"></div>
+          <div class="text-center px-4"><div id="stat-dangers" class="text-[21px] font-bold text-white leading-none">0</div><div class="text-[11px] text-white/55 mt-1">Farliga sidor</div></div>
         </div>
-        <div class="mt-1.5 text-[11px] text-white/45">blockerat åt dig hittills</div>
-        <div id="nt-credit" class="absolute bottom-3.5 right-4 text-[11px] text-white/55 max-w-[42%] text-right"></div>
+        <div class="mt-1.5 text-[11px] text-white/40">blockerat åt dig hittills</div>
+        <div id="nt-credit" class="absolute bottom-3.5 right-4 text-[11px] text-white/45 max-w-[42%] text-right"></div>
       </div>
     </div>
 
