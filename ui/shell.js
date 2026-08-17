@@ -20,11 +20,14 @@ const windowIncognito = new URLSearchParams(location.search).has('incognito');
 if (windowIncognito) document.body.classList.add('incog');
 
 /* ── URL-hjälp ── */
+// Skugga: sökmotorernas .onion-tjänster används där de finns, så att sökningen
+// stannar HELT inuti Tor (ingen utgångsserver som kan snoka) — precis som Braves
+// Tor-läge. Clearnet-varianter kvar som alternativ.
 const ENGINES = {
-  google: { label: 'Google', url: 'https://www.google.com/search?q=' },
-  duckduckgo: { label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
-  brave: { label: 'Brave Search', url: 'https://search.brave.com/search?q=' },
+  duckduckgo: { label: 'DuckDuckGo (Tor)', url: 'https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/?q=' },
+  'duckduckgo-web': { label: 'DuckDuckGo (webb)', url: 'https://duckduckgo.com/?q=' },
   startpage: { label: 'Startpage', url: 'https://www.startpage.com/sp/search?query=' },
+  google: { label: 'Google', url: 'https://www.google.com/search?q=' },
 };
 // Skugga: DuckDuckGo som standard — fungerar rent över Tor (Google spärrar
 // Tor-utgångar med captcha) och spårar dig inte.
