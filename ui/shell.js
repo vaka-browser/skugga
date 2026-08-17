@@ -26,8 +26,13 @@ const ENGINES = {
   brave: { label: 'Brave Search', url: 'https://search.brave.com/search?q=' },
   startpage: { label: 'Startpage', url: 'https://www.startpage.com/sp/search?query=' },
 };
-let searchEngine = 'google';
-try { const e = localStorage.getItem('skoll-engine'); if (e && ENGINES[e]) searchEngine = e; } catch {}
+// Skugga: DuckDuckGo som standard — fungerar rent över Tor (Google spärrar
+// Tor-utgångar med captcha) och spårar dig inte.
+let searchEngine = 'duckduckgo';
+try {
+  if (!localStorage.getItem('skugga-engine-init')) { localStorage.setItem('skoll-engine', 'duckduckgo'); localStorage.setItem('skugga-engine-init', '1'); }
+  const e = localStorage.getItem('skoll-engine'); if (e && ENGINES[e]) searchEngine = e;
+} catch {}
 function searchUrl(q) {
   // Vanligt: vald sökmotor. Inkognito: alltid DuckDuckGo (mer privat).
   if (active && active.incognito) return ENGINES.duckduckgo.url + encodeURIComponent(q);
@@ -510,6 +515,8 @@ try {
   if (!localStorage.getItem('skugga-dark-init')) { localStorage.setItem('skoll-theme', 'dark'); localStorage.setItem('skugga-dark-init', '1'); }
   const t = localStorage.getItem('skoll-theme'); if (t === 'dark' || t === 'light') theme = t;
 } catch {}
+// Engångs: rensa ev. sparad bakgrundsbild så den lila gradienten visas.
+try { if (!localStorage.getItem('skugga-bg-reset')) { localStorage.removeItem('skoll-bg'); localStorage.setItem('skugga-bg-reset', '1'); } } catch {}
 document.documentElement.dataset.theme = theme;
 function setTheme(t) {
   theme = t === 'dark' ? 'dark' : 'light';
@@ -1133,9 +1140,10 @@ function greet() {
   el.textContent = _greetCache.text;
 }
 async function loadDailyImage() {
-  // Skugga: ingen extern dagsbild — behåll den mörka lila gradienten (inget
-  // onödigt nätanrop som kan avslöja något, och det passar det anonyma temat).
-  try { $('nt-bg').style.backgroundImage = 'none'; $('nt-credit').textContent = ''; } catch {}
+  // Skugga: ingen extern dagsbild — RÖR INTE bakgrunden (den lila gradienten
+  // sitter som inline background-image; att sätta backgroundImage='none' skulle
+  // radera den och ge en gråtvättad ruta). Bara nolla ev. bildkredit.
+  try { $('nt-credit').textContent = ''; } catch {}
 }
 // Skugga: INGA färdiga genvägar — du lägger till dina egna.
 const DEFAULT_SHORTCUTS = [];
