@@ -1,6 +1,6 @@
 {
   "name": "skugga-browser",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Skugga – Vaka som går helt genom Tor (demo)",
   "main": "main.js",
   "scripts": {
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@electron/packager": "^18.4.4",
     "@tailwindcss/cli": "^4.3.3",
-    "electron": "^33.4.11",
+    "electron": "^43.4.0",
     "electron-builder": "^24.13.3",
     "tailwindcss": "^4.3.3"
   },
