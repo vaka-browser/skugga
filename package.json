@@ -1,6 +1,6 @@
 {
   "name": "skugga-browser",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "description": "Skugga \u2013 Vaka som g\u00e5r helt genom Tor (demo)",
   "main": "main.js",
   "scripts": {
