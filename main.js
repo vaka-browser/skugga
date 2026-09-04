@@ -981,6 +981,7 @@ function localeDict(code) {
 const SUGGEST_URLS = {
   google: (q) => 'https://suggestqueries.google.com/complete/search?client=firefox&hl=sv&q=' + encodeURIComponent(q),
   duckduckgo: (q) => 'https://duckduckgo.com/ac/?type=list&q=' + encodeURIComponent(q),
+  vaka: (q) => 'https://vaka-sok.vercel.app/api/suggest?q=' + encodeURIComponent(q),   // inkognito: vår egen, ingen logg
   brave: (q) => 'https://search.brave.com/api/suggest?q=' + encodeURIComponent(q),
   startpage: (q) => 'https://duckduckgo.com/ac/?type=list&q=' + encodeURIComponent(q),
 };
