@@ -171,6 +171,18 @@ function detectFavLight(url) {
   img.onerror = () => { favLight[url] = false; };
   img.src = url;
 }
+function favIconHtml(tab) {
+  // Sidans egen favicon → tvinga fram sajtens /favicon.ico → ren jordglob om inget finns.
+  let origin = ''; try { origin = new URL(tab.url).origin; } catch {}
+  const real = origin ? origin + '/favicon.ico' : '';
+  const src = tab.favicon || real;
+  if (!src) return '<span class="fav"><svg class="ic" style="width:15px;height:15px"><use href="#i-globe" /></svg></span>';
+  const fb = (real && real !== src) ? escapeHtml(real) : '';
+  const cls = favLight[tab.favicon] === true ? ' on-dark' : '';
+  return '<span class="fav' + cls + '"><img src="' + escapeHtml(src) + '" data-fb="' + fb + '" '
+    + 'onerror="var f=this.dataset.fb;if(f){this.src=f;this.dataset.fb=\'\';}else{this.style.display=\'none\';this.nextElementSibling.style.display=\'block\';}">'
+    + '<svg class="ic" style="display:none;width:15px;height:15px"><use href="#i-globe" /></svg></span>';
+}
 function renderTabs() {
   const host = $('tabs'); host.innerHTML = '';
   tabs.forEach((tab) => {
@@ -181,9 +193,9 @@ function renderTabs() {
     if (tab._closing) el.classList.add('closing');
     const fav = tab.incognito
       ? `<span class="fav"><svg class="ic" style="width:15px;height:15px"><use href="#i-incognito" /></svg></span>`
-      : (tab.favicon
-        ? `<span class="fav${favLight[tab.favicon] === true ? ' on-dark' : ''}"><img src="${tab.favicon}" onerror="this.style.visibility='hidden'"></span>`
-        : `<span class="fav"><svg class="ic" style="width:15px;height:15px"><use href="#${tab.url ? 'i-globe' : 'i-shield'}" /></svg></span>`);
+      : (!tab.url
+        ? `<span class="fav"><svg class="ic" style="width:15px;height:15px"><use href="#i-shield" /></svg></span>`
+        : favIconHtml(tab));
     el.innerHTML = `${fav}<span class="ttl">${escapeHtml(tab.title || 'Ny flik')}</span><button class="tclose"><svg class="ic" style="width:13px;height:13px"><use href="#i-close" /></svg></button>`;
     el.addEventListener('click', (e) => {
       if (e.target.closest('.tclose')) { e.stopPropagation(); closeTab(tab); } else switchTab(tab);
@@ -246,7 +258,30 @@ let skipCloseConfirm = false;
 try { skipCloseConfirm = localStorage.getItem('skoll-skip-close-confirm') === '1'; } catch {}
 window.view.onConfirmClose(() => {
   if (tabs.length <= 1 || skipCloseConfirm) { window.view.doClose(); return; }  // en flik / valt bort → stäng direkt
-  window.view.openCloseConfirm(tabs.length);
+  showCloseConfirm(tabs.length);
+});
+function showCloseConfirm(n) {
+  const box = $('closeconf');
+  if (!box) { window.view.doClose(); return; }
+  $('cc-msg').innerHTML = 'Du har <b>' + n + ' flikar</b> öppna i webbläsarfönstret.';
+  $('cc-again').checked = false;
+  window.view.hide();                 // webbvyn ligger ovanpå skalet → dölj den så rutan syns
+  box.classList.remove('hidden');
+  $('cc-yes').focus();
+}
+function hideCloseConfirm() {
+  const box = $('closeconf'); if (box) box.classList.add('hidden');
+  showActiveTab();                    // återställ sidan
+}
+$('cc-cancel').addEventListener('click', hideCloseConfirm);
+$('cc-yes').addEventListener('click', () => {
+  if ($('cc-again').checked) { try { localStorage.setItem('skoll-skip-close-confirm', '1'); } catch {} skipCloseConfirm = true; }
+  window.view.doClose();
+});
+document.addEventListener('keydown', (e) => {
+  const box = $('closeconf'); if (!box || box.classList.contains('hidden')) return;
+  if (e.key === 'Escape') { e.preventDefault(); hideCloseConfirm(); }
+  else if (e.key === 'Enter') { e.preventDefault(); $('cc-yes').click(); }
 });
 window.view.onPersistSkipClose(() => {
   try { localStorage.setItem('skoll-skip-close-confirm', '1'); } catch {}
@@ -480,16 +515,13 @@ $('tgl-krypto').addEventListener('change', (e) => {
 });
 /* Språk */
 function renderLangs() {
-  const list = $('lang-list'); if (!list) return; list.innerHTML = '';
-  [['sv', 'Svenska', true], ['en', 'English', false]].forEach(([code, label, real]) => {
-    let cur = 'sv'; try { cur = localStorage.getItem('skoll-lang') || 'sv'; } catch {}
+  const list = $('lang-list'); if (!list || !window.i18n) return; list.innerHTML = '';
+  const cur = window.i18n.lang;
+  window.i18n.langs.forEach(([code, label]) => {
     const el = document.createElement('div'); el.className = 'engine-opt' + (cur === code ? ' on' : '');
-    el.innerHTML = `<span class="engine-radio"></span><span>${label}</span>` + (real ? '' : '<span style="margin-left:auto;font-size:11px;color:#8ba3bf;">snart</span>');
-    el.addEventListener('click', () => {
-      if (!real) { showToast('Fler språk är på väg.'); return; }
-      try { localStorage.setItem('skoll-lang', code); } catch {}
-      renderLangs();
-    });
+    el.setAttribute('dir', 'auto');
+    el.innerHTML = `<span class="engine-radio"></span><span>${label}</span>`;
+    el.addEventListener('click', () => { if (code !== window.i18n.lang) window.i18n.set(code); });
     list.appendChild(el);
   });
 }
@@ -619,8 +651,9 @@ $('settings-reset').addEventListener('click', () => {
 
 /* ── Inloggning med mejl + engångskod ── */
 let account = null;   // { email, token, pro }
-try { account = JSON.parse(localStorage.getItem('skoll-account')); } catch {}
-if (account && !account.token) account = null;  // gammalt kontonummer-format → nollställ
+// Skugga: inga konton — inloggning borttagen för maximal anonymitet. Återställ ALDRIG ett konto, och töm ev. gammalt.
+account = null;
+try { localStorage.removeItem('skoll-account'); } catch {}
 let pendingEmail = null;
 let pendingLogin = null;   // (kvar, oanvänt)
 let pendingSubmit = null;  // { type:'login'|'signup', email, password, name } för 2FA-koden + "skicka ny kod"
@@ -641,19 +674,8 @@ function setLoginView(name) {
   for (const k in map) { const el = $(map[k]); if (el) el.style.display = (k === name) ? 'block' : 'none'; }
 }
 function openLogin() {
-  window.view.hide(); hideInfobar();
-  if (account) {
-    setLoginView('account');
-    $('login-email-shown').textContent = (account.name ? account.name + ' · ' : '') + (account.email || '');
-    $('login-pro-badge').style.display = account.pro ? 'inline-flex' : 'none';
-  } else {
-    $('login-email').value = ''; $('login-pw').value = ''; $('login-error').style.display = 'none';
-    setLoginView('login');
-    setTimeout(() => $('login-email').focus(), 30);
-  }
-  hideOverlayElements();
-  if (active) active.overlay = 'login';
-  $('login').classList.remove('hidden');
+  // Skugga: inloggning borttagen för maximal anonymitet — login-panelen öppnas aldrig.
+  return;
 }
 function closeLogin() {
   if (active) active.overlay = null;
@@ -663,6 +685,7 @@ function closeLogin() {
 function accountKey(a) { a = a || account; if (!a) return null; return 'k:' + (a.email || a.childId || a.name || a.token || 'user'); }
 function loginAs(token, email, pro, name) {
   account = { token, email: email || '', pro: !!pro, name: name || '' };
+  unlockHistoryForParent();   // vuxenkonto → historiken går att rensa igen
   localStorage.setItem('skoll-account', JSON.stringify(account));
   updateAccountBtn();
   try { window.session.login(accountKey(account)); } catch {}   // återställ kontots webbsession (Gmail m.m. tillbaka) + lås upp lösenord
@@ -791,6 +814,7 @@ async function doChildLogin() {
 }
 async function enterChildMode(token, child) {
   account = { token, email: '', pro: false, name: child.name, isChild: true, childId: child.id };
+  lockHistoryForChild();      // barnet kan inte radera sin historik — inte ens efter utloggning
   localStorage.setItem('skoll-account', JSON.stringify(account));
   updateAccountBtn();
   try { window.session.login(accountKey(account)); } catch {}   // barnets egen webbsession
@@ -1387,10 +1411,21 @@ window.view.onMenuZoom((dir) => { if (active && active.url) window.view.zoom(act
 window.view.onMenuPrint(() => { if (active && active.url) window.view.print(active.id); });
 window.view.onCloseTab(() => { if (active) closeTab(active); });
 window.view.onFocusAddress(() => { addressInput.focus(); addressInput.select(); });
-window.view.onClearData(() => { try { localStorage.removeItem('skoll-history'); } catch {} if (typeof historyOpen !== 'undefined' && historyOpen) renderHistory(); showToast('Surfdata rensad.'); });
+window.view.onClearData(() => { const kept = !clearHistory(); if (typeof historyOpen !== 'undefined' && historyOpen) renderHistory(); showToast(kept ? 'Surfdata rensad – historiken sparas åt dina föräldrar.' : 'Surfdata rensad.'); });
 
 /* ── Historik ── */
 function getHistory() { try { const h = JSON.parse(localStorage.getItem('skoll-history')); return Array.isArray(h) ? h : []; } catch { return []; } }
+function saveHistory(h) { try { localStorage.setItem('skoll-history', JSON.stringify(h)); } catch {} }
+/* Barn får INTE radera sin historik — bara föräldern. Låset sitter kvar även om barnet
+   loggar ut (flagga i localStorage) och släpps först när ett vuxenkonto loggar in. */
+function historyLocked() {
+  try { if (typeof account !== 'undefined' && account && account.isChild) return true; } catch {}
+  try { return localStorage.getItem('skoll-hist-lock') === '1'; } catch { return false; }
+}
+function lockHistoryForChild() { try { localStorage.setItem('skoll-hist-lock', '1'); } catch {} }
+function unlockHistoryForParent() { try { localStorage.removeItem('skoll-hist-lock'); } catch {} }
+function removeHistory(url) { if (historyLocked()) return false; saveHistory(getHistory().filter((e) => e.url !== url)); return true; }   // ta bort EN sida ur historiken
+function clearHistory() { if (historyLocked()) return false; try { localStorage.removeItem('skoll-history'); } catch {} return true; }   // ta bort allt
 function pushHistory(url, title, favicon) {
   if (!/^https?:/i.test(url)) return;
   const all = getHistory();
@@ -1399,7 +1434,7 @@ function pushHistory(url, title, favicon) {
   let h = all.filter((e) => e.url !== url);
   h.unshift({ url, title: title || (prev && prev.title) || url, favicon: favicon || (prev && prev.favicon) || null, t: Date.now(), n });
   if (h.length > 500) h = h.slice(0, 500);
-  try { localStorage.setItem('skoll-history', JSON.stringify(h)); } catch {}
+  saveHistory(h);
   // Öppen insyn: barnets besök skickas till servern så föräldern kan se historiken
   if (account && account.isChild && account.token) { try { window.family.historyAdd(account.token, url, title || ''); } catch {} }
 }
@@ -1407,21 +1442,44 @@ let historyOpen = false;
 function renderHistory() {
   const list = $('history-list'); list.innerHTML = '';
   const h = getHistory();
+  const locked = historyLocked();
+  const clearBtn = $('history-clear'); if (clearBtn) clearBtn.style.display = (h.length && !locked) ? 'flex' : 'none';
+  resetHistoryClear();
   if (!h.length) { list.innerHTML = '<div style="padding:16px;color:#8ba3bf;font-size:13px">Ingen historik än.</div>'; return; }
+  if (locked) list.innerHTML = '<div style="display:flex;gap:8px;padding:11px 14px;background:rgba(47,143,212,.07);border-bottom:1px solid #eef2f7;color:var(--color-navy-700);font-size:12px;line-height:1.45">👁<span>Din historik sparas åt dina föräldrar och kan inte tas bort här.</span></div>';
   h.forEach((e) => {
     const row = document.createElement('div'); row.className = 'hist-row';
     const fav = e.favicon
       ? `<img class="hist-fav" src="${e.favicon}">`
       : `<span class="hist-fav" style="display:grid;place-items:center;color:#8ba3bf"><svg class="ic" style="width:13px;height:13px"><use href="#i-globe" /></svg></span>`;
-    row.innerHTML = `${fav}<div class="hist-txt"><div class="hist-title">${escapeHtml(e.title)}</div><div class="hist-url">${escapeHtml(e.url.replace(/^https?:\/\/(www\.)?/, ''))}</div></div>`;
+    row.innerHTML = `${fav}<div class="hist-txt"><div class="hist-title">${escapeHtml(e.title)}</div><div class="hist-url">${escapeHtml(e.url.replace(/^https?:\/\/(www\.)?/, ''))}</div></div>` + (locked ? '' : `<button class="row-btn" title="Ta bort från historiken"><svg class="ic ic-sm"><use href="#i-trash" /></svg></button>`);
     row.addEventListener('click', () => { closeHistory(); if (active) guardedNavigate(active, e.url); });
+    if (!locked) row.querySelector('.row-btn').addEventListener('click', (ev) => { ev.stopPropagation(); removeHistory(e.url); renderHistory(); });
     list.appendChild(row);
   });
 }
 function openHistory() { renderHistory(); $('history').classList.remove('hidden'); window.view.insetLeft(320); historyOpen = true; }
-function closeHistory() { $('history').classList.add('hidden'); window.view.insetLeft(0); historyOpen = false; }
+function closeHistory() { $('history').classList.add('hidden'); window.view.insetLeft(0); historyOpen = false; resetHistoryClear(); }
 window.view.onOpenHistory(() => { historyOpen ? closeHistory() : openHistory(); });
 $('history-close').addEventListener('click', closeHistory);
+/* "Rensa allt" i två steg — ett felklick ska inte radera hela historiken. */
+let histClearArmed = 0;
+function resetHistoryClear() {
+  histClearArmed = 0;
+  const t = $('history-clear-txt'); if (t) t.textContent = 'Rensa allt';
+  const b = $('history-clear'); if (b) { b.style.color = 'var(--color-navy-700)'; b.style.borderColor = 'var(--color-line)'; }
+}
+$('history-clear').addEventListener('click', () => {
+  if (!histClearArmed) {
+    histClearArmed = 1;
+    const t = $('history-clear-txt'); if (t) t.textContent = 'Rensa allt?';
+    const b = $('history-clear'); if (b) { b.style.color = 'var(--color-danger)'; b.style.borderColor = 'var(--color-danger)'; }
+    setTimeout(() => { if (histClearArmed) resetHistoryClear(); }, 4000);
+    return;
+  }
+  if (clearHistory()) { renderHistory(); showToast('Historiken är rensad.'); }
+  else { resetHistoryClear(); showToast('Bara föräldern kan rensa historiken.'); }
+});
 
 /* ── Bokmärken ── */
 function getBookmarks() { try { const b = JSON.parse(localStorage.getItem('skoll-bookmarks')); return Array.isArray(b) ? b : []; } catch { return []; } }
