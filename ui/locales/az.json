@@ -663,5 +663,15 @@
  "Historiken är rensad.": "Tarix təmizlənir.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "Tarixçəniz valideynləriniz üçün saxlanılıb və burada silinə bilməz.",
  "Bara föräldern kan rensa historiken.": "Tarixi yalnız valideyn təmizləyə bilər.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Baxış datası silindi - tarixçə valideynləriniz üçün yadda saxlanılır."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Baxış datası silindi - tarixçə valideynləriniz üçün yadda saxlanılır.",
+ "Pausa": "Fasilə",
+ "Fortsätt": "Davam et",
+ "Pausad": "Fasilə verildi",
+ "Klar": "Bitdi",
+ "Avbruten": "Ləğv edildi",
+ "Misslyckades": "Uğursuz oldu",
+ "Klar (behållen)": "Bitdi (saxlanılır)",
+ "hämtat…": "gətirildi...",
+ "Blockerad": "Blok edilib",
+ "hot": "təhlükə"
 }

@@ -663,5 +663,15 @@
  "Historiken är rensad.": "ისტორია გასუფთავებულია.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "თქვენი ისტორია შენახულია თქვენი მშობლებისთვის და მისი წაშლა შეუძლებელია.",
  "Bara föräldern kan rensa historiken.": "მხოლოდ მშობელს შეუძლია ისტორიის გასუფთავება.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "დათვალიერების მონაცემები გასუფთავებულია - ისტორია შენახულია თქვენი მშობლებისთვის."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "დათვალიერების მონაცემები გასუფთავებულია - ისტორია შენახულია თქვენი მშობლებისთვის.",
+ "Pausa": "პაუზა",
+ "Fortsätt": "განაგრძეთ",
+ "Pausad": "შეჩერდა",
+ "Klar": "შესრულებულია",
+ "Avbruten": "გაუქმდა",
+ "Misslyckades": "ვერ მოხერხდა",
+ "Klar (behållen)": "შესრულებულია (შენარჩუნებულია)",
+ "hämtat…": "მოტანილი…",
+ "Blockerad": "დაბლოკილია",
+ "hot": "მუქარა"
 }

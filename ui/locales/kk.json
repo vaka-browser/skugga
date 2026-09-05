@@ -663,5 +663,15 @@
  "Historiken är rensad.": "Тарих тазаланады.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "Тарихыңыз ата-анаңыз үшін сақталады және бұл жерде жойылмайды.",
  "Bara föräldern kan rensa historiken.": "Тарихты тек ата-ана ғана тазалай алады.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Шолу деректері тазартылды - тарих ата-анаңыз үшін сақталады."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Шолу деректері тазартылды - тарих ата-анаңыз үшін сақталады.",
+ "Pausa": "Кідірту",
+ "Fortsätt": "Жалғастыру",
+ "Pausad": "Кідіртілді",
+ "Klar": "Дайын",
+ "Avbruten": "Бас тартылды",
+ "Misslyckades": "Сәтсіз",
+ "Klar (behållen)": "Дайын (сақталды)",
+ "hämtat…": "әкелінді…",
+ "Blockerad": "Блокталған",
+ "hot": "қауіп"
 }

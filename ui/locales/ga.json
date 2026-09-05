@@ -663,5 +663,15 @@
  "Historiken är rensad.": "Tá an stair glanta.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "Sábháiltear do stair do do thuismitheoirí agus ní féidir í a scriosadh anseo.",
  "Bara föräldern kan rensa historiken.": "Ní féidir ach leis an tuismitheoir an stair a ghlanadh.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Glanadh na sonraí brabhsála - sábhálfar an stair do do thuismitheoirí."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Glanadh na sonraí brabhsála - sábhálfar an stair do do thuismitheoirí.",
+ "Pausa": "Sos",
+ "Fortsätt": "Lean ort",
+ "Pausad": "Sos",
+ "Klar": "Déanta",
+ "Avbruten": "Ar ceal",
+ "Misslyckades": "Theip",
+ "Klar (behållen)": "Déanta (Coinnithe)",
+ "hämtat…": "faighte…",
+ "Blockerad": "bactha",
+ "hot": "bagairt"
 }

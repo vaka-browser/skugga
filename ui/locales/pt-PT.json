@@ -663,5 +663,15 @@
  "Historiken är rensad.": "O histórico foi apagado.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "O seu histórico é guardado para os seus pais e não pode ser eliminado aqui.",
  "Bara föräldern kan rensa historiken.": "Apenas o pai pode limpar o histórico.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Dados de navegação apagados - o histórico é guardado para os seus pais."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Dados de navegação apagados - o histórico é guardado para os seus pais.",
+ "Pausa": "Pausa",
+ "Fortsätt": "Continuar",
+ "Pausad": "Pausado",
+ "Klar": "Concluído",
+ "Avbruten": "Cancelado",
+ "Misslyckades": "Fracassado",
+ "Klar (behållen)": "Concluído (mantido)",
+ "hämtat…": "buscado…",
+ "Blockerad": "Bloqueado",
+ "hot": "ameaça"
 }

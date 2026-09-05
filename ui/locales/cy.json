@@ -663,5 +663,15 @@
  "Historiken är rensad.": "Mae'r hanes wedi'i glirio.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "Mae eich hanes yn cael ei gadw ar gyfer eich rhieni ac ni ellir ei ddileu yma.",
  "Bara föräldern kan rensa historiken.": "Dim ond y rhiant all glirio'r hanes.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Clirio data pori - mae'r hanes yn cael ei gadw ar gyfer eich rhieni."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Clirio data pori - mae'r hanes yn cael ei gadw ar gyfer eich rhieni.",
+ "Pausa": "Oedwch",
+ "Fortsätt": "Parhau",
+ "Pausad": "Wedi seibio",
+ "Klar": "Wedi'i wneud",
+ "Avbruten": "Wedi'i ganslo",
+ "Misslyckades": "Wedi methu",
+ "Klar (behållen)": "Wedi'i wneud (Wedi'i gadw)",
+ "hämtat…": "nôl…",
+ "Blockerad": "Wedi'i rwystro",
+ "hot": "bygythiad"
 }

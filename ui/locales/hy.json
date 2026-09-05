@@ -663,5 +663,15 @@
  "Historiken är rensad.": "Պատմությունը մաքրված է։",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "Ձեր պատմությունը պահված է ձեր ծնողների համար և չի կարող ջնջվել այստեղ:",
  "Bara föräldern kan rensa historiken.": "Միայն ծնողը կարող է մաքրել պատմությունը:",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Զննարկման տվյալները մաքրված են. պատմությունը պահվում է ձեր ծնողների համար:"
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Զննարկման տվյալները մաքրված են. պատմությունը պահվում է ձեր ծնողների համար:",
+ "Pausa": "Դադար",
+ "Fortsätt": "Շարունակեք",
+ "Pausad": "Դադարեցված է",
+ "Klar": "Կատարված է",
+ "Avbruten": "Չեղարկված է",
+ "Misslyckades": "Չհաջողվեց",
+ "Klar (behållen)": "Կատարված է (պահված է)",
+ "hämtat…": "բերված…",
+ "Blockerad": "Արգելափակված",
+ "hot": "սպառնալիք"
 }

@@ -663,5 +663,15 @@
  "Historiken är rensad.": "Historien er ryddet.",
  "Din historik sparas åt dina föräldrar och kan inte tas bort här.": "Historien din er lagret for foreldrene dine og kan ikke slettes her.",
  "Bara föräldern kan rensa historiken.": "Bare forelderen kan slette historikken.",
- "Surfdata rensad – historiken sparas åt dina föräldrar.": "Nettleserdata slettet – loggen lagres for foreldrene dine."
+ "Surfdata rensad – historiken sparas åt dina föräldrar.": "Nettleserdata slettet – loggen lagres for foreldrene dine.",
+ "Pausa": "Pause",
+ "Fortsätt": "Fortsette",
+ "Pausad": "Pause",
+ "Klar": "Ferdig",
+ "Avbruten": "Kansellert",
+ "Misslyckades": "Mislyktes",
+ "Klar (behållen)": "Ferdig (beholdt)",
+ "hämtat…": "hentet...",
+ "Blockerad": "Blokkert",
+ "hot": "trussel"
 }
