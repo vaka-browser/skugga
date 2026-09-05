@@ -24,8 +24,10 @@ let autoUpdater = null;
 try { ({ autoUpdater } = require('electron-updater')); } catch {}
 
 // Riktig filtermotor (EasyList + EasyPrivacy) för nätverks-/kosmetisk blockering.
-const { BraveAdblock, registerScheme: registerAdblockScheme } = require('./adblock-brave');   // Braves adblock-rust via adblock-rs (native)
-registerAdblockScheme();   // före app.ready
+let ElectronBlocker = null, AdRequest = null;
+try { ({ ElectronBlocker } = require('@ghostery/adblocker-electron')); } catch {}
+try { ({ Request: AdRequest } = require('@ghostery/adblocker')); }
+catch { try { ({ Request: AdRequest } = require('@ghostery/adblocker-electron')); } catch {} }
 
 const KRYPTO_W = 400;
 const NET_H = 340;          // nätverksinspektörens dockade höjd
@@ -134,45 +136,103 @@ function hostCategory(url) {
     return TRACKER_HOSTS.has(hit) ? 'tracker' : 'ad';
   } catch { return null; }
 }
-// ── Filtermotor: Braves adblock-rust (adblock-brave.js) – laddas en gång, aktiveras per session ──
-let engine = null;                       // sätts till motorn när den är laddad (används som "är igång"-flagga)
+// ── Filtermotor: laddas en gång, aktiveras per session ──
+let engine = null;
+let engineReady = null;
 const blockedSessions = new Set();
+
+function loadEngine() {
+  if (engineReady) return engineReady;
+  engineReady = (async () => {
+    if (!ElectronBlocker) return;
+    try {
+      // Medföljande filterlistor (uBlock + AdGuard-settet) — parsas lokalt, ingen nätverkshämtning.
+      const dir = path.join(__dirname, 'filters');
+      let files = [];
+      try { files = fs.readdirSync(dir).filter((f) => f.endsWith('.txt') && f !== 'resources.txt'); } catch {}
+      const text = files
+        .map((f) => { try { return fs.readFileSync(path.join(dir, f), 'utf8'); } catch { return ''; } })
+        .join('\n');
+      if (!text.trim()) {
+        engine = await ElectronBlocker.fromPrebuiltAdsAndTracking(globalThis.fetch || require('cross-fetch'));
+      } else {
+        // loadCosmeticFilters => element-göm + scriptlet-injektion (pop-under-/redirect-motgifter à la uBlock/Brave)
+        engine = ElectronBlocker.parse(text, { loadCosmeticFilters: true, loadNetworkFilters: true });
+        try {
+          const { Resources } = require('@ghostery/adblocker-electron');
+          const resTxt = fs.readFileSync(path.join(dir, 'resources.txt'), 'utf8');
+          engine.resources = Resources.parse(resTxt, { checksum: 'vaka' });   // 149 scriptlets: window.open-defuser m.fl.
+        } catch {}
+      }
+      engine.on('request-blocked', (request) => {
+        adblockCount++;
+        broadcast('adblock:count', adblockCount);
+        broadcast('adblock:hit', hostCategory(request.url) === 'tracker' ? 'tracker' : 'ad');
+      });
+      // Kosmetik/scriptlet-injektion i Electron 33 (registerPreloadScript saknas → vi kör setPreloads i enableEngineOn)
+      try {
+        ipcMain.removeHandler('@ghostery/adblocker/inject-cosmetic-filters');
+        ipcMain.removeHandler('@ghostery/adblocker/is-mutation-observer-enabled');
+        ipcMain.handle('@ghostery/adblocker/inject-cosmetic-filters', (e, url, msg) => engine.onInjectCosmeticFilters(e, url, msg));
+        ipcMain.handle('@ghostery/adblocker/is-mutation-observer-enabled', (e) => engine.onIsMutationObserverEnabled(e));
+      } catch {}
+      if (adblockOn) for (const s of blockedSessions) { try { enableEngineOn(s); } catch {} }
+    } catch { /* faller tillbaka på hostCategory-vakten om parsning misslyckas */ }
+  })();
+  return engineReady;
+}
+
+function ghosteryPreloadPath() {
+  try { return require.resolve('@ghostery/adblocker-electron-preload'); } catch { return null; }
+}
 // Allowlist: blockera ALDRIG anrop till inloggnings-/konto-domäner (annars kan 2FA-verifiering m.m. hänga)
 const ADBLOCK_ALLOW = /(^|\.)(github\.com|githubusercontent\.com|githubassets\.com|github\.io|accounts\.google\.com|login\.microsoftonline\.com|login\.live\.com|appleid\.apple\.com|okta\.com|auth0\.com|duosecurity\.com)$/i;
 function adblockAllowHost(url) { try { return ADBLOCK_ALLOW.test(new URL(url).hostname); } catch { return false; } }
-const adblock = new BraveAdblock({
-  filtersDir: path.join(__dirname, 'filters'),
-  cacheDir: () => app.getPath('userData'),
-  preloadPath: path.join(__dirname, 'adblock-preload.js'),
-  allowHost: (u) => adblockAllowHost(u),
-  isOn: () => adblockOn,
-  onBlocked: (url) => { adblockCount++; broadcast('adblock:count', adblockCount); broadcast('adblock:hit', hostCategory(url) === 'tracker' ? 'tracker' : 'ad'); },
-});
-function loadEngine() { return adblock.load().then((ok) => { if (ok) engine = adblock; return ok; }); }
-function enableEngineOn(sess) { adblock.enableOn(sess); }
-function disableEngineOn(sess) { adblock.disableOn(sess); }
-// Kosmetik för adblock-preload.js (synkront – måste vara klart innan sidans skript kör)
-ipcMain.on('adblock:cosmetics', (e, url) => { e.returnValue = adblock.cosmeticsFor(String(url || '')); });
-ipcMain.on('adblock:classid', (e, classes, ids, exceptions) => { e.returnValue = adblock.classIdSelectors(classes, ids, exceptions); });
+// Aktivera motorn på en session: nätverksblockering + kosmetik/scriptlet-preload (Electron 33-kompatibelt).
+function enableEngineOn(sess) {
+  if (!engine) return;
+  try {
+    sess.webRequest.onHeadersReceived({ urls: ['<all_urls>'] }, (d, cb) => engine.onHeadersReceived(d, cb));
+    sess.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, (d, cb) => {
+      if (adblockAllowHost(d.url)) { cb({}); return; }   // släpp igenom GitHub/inloggnings-anrop orört
+      engine.onBeforeRequest(d, cb);
+    });
+  } catch {}
+  try {
+    const p = ghosteryPreloadPath();
+    if (!p) return;
+    if (sess.registerPreloadScript) {          // Electron ≥35 (setPreloads borttaget i nyare)
+      if (!sess.__ghosteryPreloadId) sess.__ghosteryPreloadId = sess.registerPreloadScript({ type: 'frame', filePath: p });
+    } else {
+      const cur = sess.getPreloads() || []; if (!cur.includes(p)) sess.setPreloads([...cur, p]);
+    }
+  } catch {}
+}
+function disableEngineOn(sess) {
+  try { sess.webRequest.onHeadersReceived(null); sess.webRequest.onBeforeRequest(null); } catch {}
+  try {
+    if (sess.unregisterPreloadScript) {
+      if (sess.__ghosteryPreloadId) { sess.unregisterPreloadScript(sess.__ghosteryPreloadId); sess.__ghosteryPreloadId = null; }
+    } else {
+      const p = ghosteryPreloadPath(); if (p) sess.setPreloads((sess.getPreloads() || []).filter((x) => x !== p));
+    }
+  } catch {}
+}
 
 function installAdblockOn(sess) {
   blockedSessions.add(sess);
-  adblock.install(sess);
-  if (!engine) loadEngine();
+  if (engine && adblockOn) enableEngineOn(sess);
+  else loadEngine();
 }
 
-// Popup-fönster som får öppnas på riktigt trots att de är korsdomän: inloggning/betalning.
-const POPUP_TRUSTED = /(^|\.)(accounts\.google\.com|google\.com|appleid\.apple\.com|apple\.com|login\.microsoftonline\.com|login\.live\.com|microsoft\.com|facebook\.com|github\.com|bankid\.com|stripe\.com|paypal\.com|klarna\.com|yahoo\.com|twitch\.tv|discord\.com|auth0\.com|okta\.com|linkedin\.com|x\.com|twitter\.com|slack\.com|zoom\.us|adyen\.com|swish\.nu|trustly\.com|vipps\.no|mobilepay\.dk|spotify\.com|amazon\.com|amazon\.se|steamcommunity\.com|steampowered\.com|epicgames\.com|battle\.net|dropbox\.com|atlassian\.com|gitlab\.com|bitbucket\.org|shopify\.com|frejaeid\.com|signicat\.com|criipto\.com|nets\.eu|paypalobjects\.com|duosecurity\.com)$/i;
-function popupTrustedHost(url) { try { return POPUP_TRUSTED.test(new URL(url).hostname); } catch { return false; } }
-function siteOf(url) {
-  try { const p = new URL(url).hostname.toLowerCase().split('.'); return (p.length > 2 && /^(co|com|org|net|gov|edu|ac)$/.test(p[p.length - 2])) ? p.slice(-3).join('.') : p.slice(-2).join('.'); } catch { return ''; }
-}
-function sameSite(a, b) { const x = siteOf(a); return !!x && x === siteOf(b); }
 // Ska den här navigeringen/popupen dödas direkt? (annons/tracker/skräp-schema)
 function isBlockedTarget(url, sourceUrl) {
   if (!/^https?:/i.test(url)) return true;            // javascript:, data:, blob:, about:blank-kedjor
   try {
-    if (adblock.checkTarget(url, sourceUrl)) return true;   // main_frame- och $popup-regler (Braves motor)
+    if (engine && AdRequest) {
+      const r = AdRequest.fromRawDetails({ type: 'document', url, sourceUrl: sourceUrl || url });
+      if (engine.match(r).match) return true;
+    }
   } catch {}
   return !!hostCategory(url);
 }
@@ -426,26 +486,14 @@ function ensureView(ctx, tabId) {
   // aldrig genom window.open/navigering. Därför är även window.open-nedladdningar säkra.
   wc.setWindowOpenHandler((details) => {
     const url = details.url || '';
-    const from = wc.getURL();
-    // Popup-storm: Chrome/Brave tillåter EXAKT ett fönster per klick. Fler window.open inom
-    // två sekunder från samma sida är en annonsflod (piratsajter) → allt utom det första dör.
-    const st = wc.__popups || (wc.__popups = { t: 0, n: 0 }); const now = Date.now();
-    st.n = (now - st.t < 2000) ? st.n + 1 : 1; st.t = now;
-    if (st.n > 1) return { action: 'deny' };
-    if (adblockOn && (!/^https?:/i.test(url) || isBlockedTarget(url, from))) {
+    if (adblockOn && (!/^https?:/i.test(url) || isBlockedTarget(url, wc.getURL()))) {
       return { action: 'deny' };                                  // annons/pop-under/skräp-schema → död
     }
-    // Äkta popup (t.ex. "Logga in med Google"/OAuth) öppnas med window.open + fönster-features och
-    // måste vara ett RIKTIGT fönster med window.opener + delad session. Men det får BARA gälla
-    // samma sajt eller kända inloggnings-/betaltjänster – allt annat är popunder-mönstret från
-    // annonssajter (popunder) och dödas helt.
+    // Äkta popup (t.ex. "Logga in med Google"/OAuth) öppnas med window.open + fönster-features.
+    // Måste öppnas som RIKTIGT popup-fönster med window.opener bevarad + delad session,
+    // annars svarar Google "This page must be opened as a popup" och inloggningen dör.
     if (details.disposition === 'new-window' || (details.features && details.features.length)) {
-      if (sameSite(url, from) || popupTrustedHost(url)) {
-        return { action: 'allow', overrideBrowserWindowOptions: { width: 520, height: 680, resizable: true, autoHideMenuBar: true } };
-      }
-      // Korsdomän-fönster från en okänd sajt = popunder. Dör helt – blir inte ens en flik.
-      // (Vanliga länkar med target=_blank har inga fönster-features och blir flik som vanligt.)
-      return { action: 'deny' };
+      return { action: 'allow', overrideBrowserWindowOptions: { width: 520, height: 680, resizable: true, autoHideMenuBar: true } };
     }
     if (url) sendTo(ctx, 'open-new-tab', url);                     // vanlig ny flik (Ctrl/mitten-klick, target=_blank)
     return { action: 'deny' };
@@ -957,10 +1005,6 @@ ipcMain.on('i18n:load', (e, lang) => {
     e.returnValue = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui', 'locales', code + '.json'), 'utf8'));
   } catch { e.returnValue = {}; }
 });
-// Skalet färgar om fönsterknapparna (Windows/Linux-overlay) när tema/inkognito byts.
-ipcMain.on('win:titlebar', (e, c) => {
-  try { const w = BrowserWindow.fromWebContents(e.sender); if (w && w.setTitleBarOverlay && c) w.setTitleBarOverlay({ color: String(c.color || '#e7edf4'), symbolColor: String(c.symbolColor || '#0e2a47'), height: 44 }); } catch {}
-});
 ipcMain.on('win:do-close', (e) => {
   const ctx = wins.get(e.sender.id); if (ctx) ctx.forceClose = true;
   const w = BrowserWindow.fromWebContents(e.sender); if (w) w.close();
@@ -1253,11 +1297,6 @@ function createWindow(incognito) {
     width: 1280, height: 820, minWidth: 900, minHeight: 600,
     backgroundColor: incognito ? '#0a0512' : '#0e2a47',
     title: incognito ? 'Skugga – Inkognito' : 'Skugga',
-    // Som Brave/Chrome: ingen egen titelrad – flikarna ligger i samma rad som fönsterknapparna.
-    titleBarStyle: 'hidden',
-    ...(process.platform === 'darwin'
-      ? { trafficLightPosition: { x: 14, y: 14 } }
-      : { titleBarOverlay: { color: incognito ? '#0b0618' : '#e7edf4', symbolColor: incognito ? '#cbbde6' : '#0e2a47', height: 44 } }),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false },
   });
   const id = win.webContents.id;
