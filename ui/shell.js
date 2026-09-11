@@ -272,6 +272,9 @@ window.view.onDidNavigate((id, url, b, f) => {
   saveOpenTabs();
   if (t.warning && t.warning.url !== url) { t.warning = null; if (t === active) hideInfobar(); }
   if (t === active) { addressInput.value = pretty(url); updateNavButtons(); updateStar(); }
+  // Korsdomän-navigeringar sker numera nativt (så POST bevaras) – därför görs de snabba kollarna här i stället.
+  if (typeof famBlocked === 'function' && famBlocked(url)) { try { window.view.stop(t.id); } catch {} if (typeof showBlockScreen === 'function') showBlockScreen(url); return; }
+  if (protectionOn && !t.bypassed.has(url) && instantDanger(url)) { try { window.view.stop(t.id); } catch {} t.verdict = localDanger(); if (t === active) { window.view.hide(); setShield('danger'); } showDanger(t, url, t.verdict); return; }
   backgroundCheck(t, url);
 });
 window.view.onTitle((id, title) => { const t = byId(id); if (t) { t.title = title; renderTabs(); if (t.url && !t.incognito) pushHistory(t.url, title, t.favicon); } });

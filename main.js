@@ -169,6 +169,14 @@ function installAdblockOn(sess) {
 
 // Popup-fönster som får öppnas på riktigt trots att de är korsdomän: inloggning/betalning.
 const POPUP_TRUSTED = /(^|\.)(accounts\.google\.com|google\.com|appleid\.apple\.com|apple\.com|login\.microsoftonline\.com|login\.live\.com|microsoft\.com|facebook\.com|github\.com|bankid\.com|stripe\.com|paypal\.com|klarna\.com|yahoo\.com|twitch\.tv|discord\.com|auth0\.com|okta\.com|linkedin\.com|x\.com|twitter\.com|slack\.com|zoom\.us|adyen\.com|swish\.nu|trustly\.com|vipps\.no|mobilepay\.dk|spotify\.com|amazon\.com|amazon\.se|steamcommunity\.com|steampowered\.com|epicgames\.com|battle\.net|dropbox\.com|atlassian\.com|gitlab\.com|bitbucket\.org|shopify\.com|frejaeid\.com|signicat\.com|criipto\.com|nets\.eu|paypalobjects\.com|duosecurity\.com)$/i;
+// Samma lista som skalets instantDanger (ui/shell.js) – håll dem i synk.
+function instantDangerMain(url) {
+  try {
+    const h = new URL(url).hostname.toLowerCase();
+    const list = ['farlig.exempel.se', 'bank-verifiering.se', 'testsafebrowsing.appspot.com'];
+    return list.some((x) => h === x || h.endsWith('.' + x)) || /phish|malware|bluff|scam/i.test(h);
+  } catch { return false; }
+}
 function popupTrustedHost(url) { try { return POPUP_TRUSTED.test(new URL(url).hostname); } catch { return false; } }
 function siteOf(url) {
   try { const p = new URL(url).hostname.toLowerCase().split('.'); return (p.length > 2 && /^(co|com|org|net|gov|edu|ac)$/.test(p[p.length - 2])) ? p.slice(-3).join('.') : p.slice(-2).join('.'); } catch { return ''; }
@@ -471,9 +479,13 @@ function ensureView(ctx, tabId) {
     let sameOrigin = false;
     try { sameOrigin = new URL(url).origin === new URL(wc.getURL()).origin; } catch {}
     if (sameOrigin) return;
-    // Korsdomän-länkklick → scanna först via guardedNavigate (som förut).
-    e.preventDefault();
-    sendTo(ctx, 'link-navigate', tabId, url);
+    // Korsdomän: navigera NATIVT även här. preventDefault + loadURL i skalet gjorde om navigeringen till GET,
+    // och då dog allt som svarar med POST över domängräns – Googles "form_post"-svar till Adobe/IMS
+    // ("unsupported method GET please try with [POST]"), SAML-inloggningar, betalningar som postar
+    // tillbaka till butiken. Skyddet ligger kvar: kända bluffadresser stoppas synkront här (samma lista
+    // som skalets instantDanger), allt annat kollas i bakgrunden av skalet vid did-navigate
+    // (backgroundCheck stoppar sidan och visar varningen), och familjefiltret kollas vid ankomst.
+    if (instantDangerMain(url)) { e.preventDefault(); sendTo(ctx, 'link-navigate', tabId, url); return; }
   });
   wc.on('will-redirect', (e, url) => {
     if (adblockOn && isBlockedTarget(url, wc.getURL())) { try { e.preventDefault(); } catch {} }
