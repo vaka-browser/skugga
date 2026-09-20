@@ -1354,26 +1354,61 @@ function createWindow(incognito) {
   // själva innehållsytan (electron/electron#48588). Ett maximerat fönster
   // blev 1372x912 på en 1920x1080-skärm i samma ögonblick som fokus gick till
   // den andra skärmen (Cetto 2026-09-04, VAKA_WIN_DEBUG-logg). Vakten: är
-  // fönstret maximerat men mindre än skärmens arbetsyta, sätt tillbaka storleken.
+  // fönstret maximerat men mindre än det BRUKAR bli maximerat på just den
+  // skärmen, sätt tillbaka storleken.
+  //
+  // "Brukar bli" mäts på fönstret självt — vi frågar INTE efter skärmens
+  // arbetsyta. Electron på Wayland känner nämligen inte till panelen (Dash to
+  // Panel sitter bara på primärskärmen) utan rapporterar workArea == hela
+  // skärmen för alla skärmar. Den gamla vakten jämförde mot den, tyckte att ett
+  // korrekt maximerat 1920x1034-fönster hade krympt, växte det till 1920x1080,
+  // fick det tillbakaklämt av kompositören, slog till igen — och fönstret
+  // skakade i all oändlighet, men bara på skärmen med panel (Cetto 2026-09-20).
+  // Därför två ändringar: lär av fönstret, och ge upp efter några försök i
+  // stället för att stå och bråka med kompositören.
+  const REGROW_MAX = 3;
+  const maxReal = new Map();                 // skärm-id -> {width,height} = maximerat på riktigt
+  const dispId = (b) => { try { return screen.getDisplayMatching(b).id; } catch { return -1; } };
+  // Lär bara av ett fönster som HAR fokus: CSD-krympningen slår till vid blur,
+  // och den storleken får aldrig bli den vi minns som "maximerat".
+  const learnMax = () => {
+    try {
+      if (win.isDestroyed() || !win.isMaximized() || win.isFullScreen() || !win.isFocused()) return;
+      const b = win.getBounds();
+      const id = dispId(b), prev = maxReal.get(id);
+      if (prev && b.width <= prev.width && b.height <= prev.height) return;
+      maxReal.set(id, { width: Math.max(b.width, prev ? prev.width : 0), height: Math.max(b.height, prev ? prev.height : 0) });
+    } catch {}
+  };
+  win.on('maximize', () => { ctx._regrowTries = 0; setTimeout(learnMax, 250); });
+  win.on('unmaximize', () => { ctx._regrowTries = 0; });
+  win.once('show', () => setTimeout(learnMax, 600));   // startade redan maximerat: ingen maximize-händelse
   win.on('resize', () => {
     try {
       if (!win.isMaximized() || win.isFullScreen()) return;
       const b = win.getBounds();
-      const wa = screen.getDisplayMatching(b).workArea;
-      if (b.width >= wa.width - 4 && b.height >= wa.height - 4) return;
+      const known = maxReal.get(dispId(b));
+      if (!known) { setTimeout(learnMax, 250); return; }   // vet inte än: mät först, väx aldrig på gissning
+      if (b.width >= known.width - 4 && b.height >= known.height - 4) { learnMax(); return; }
       if (ctx._regrow) return;
+      if ((ctx._regrowTries || 0) >= REGROW_MAX) return;    // kompositören vann: sluta bråka
+      ctx._regrowTries = (ctx._regrowTries || 0) + 1;
       ctx._regrow = setTimeout(() => {
         ctx._regrow = null;
         try {
           if (win.isDestroyed() || !win.isMaximized()) return;
           const nb = win.getBounds();
-          if (nb.width >= wa.width - 4 && nb.height >= wa.height - 4) return;
-          win.setSize(wa.width, wa.height);
+          if (nb.width >= known.width - 4 && nb.height >= known.height - 4) return;
+          win.setSize(known.width, known.height);
           setTimeout(() => {
             try {
               if (win.isDestroyed() || !win.isMaximized()) return;
               const b2 = win.getBounds();
-              if (b2.width < wa.width - 4 || b2.height < wa.height - 4) { win.unmaximize(); win.maximize(); }
+              if (b2.width >= known.width - 4 && b2.height >= known.height - 4) return;
+              // Sista försöket bet inte heller: acceptera kompositörens mått som
+              // det nya "maximerat" i stället för att fortsätta kasta om fönstret.
+              if ((ctx._regrowTries || 0) >= REGROW_MAX) { maxReal.set(dispId(b2), { width: b2.width, height: b2.height }); return; }
+              win.unmaximize(); win.maximize();
             } catch {}
           }, 150);
         } catch {}
